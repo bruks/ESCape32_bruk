@@ -677,8 +677,8 @@ void main(void) {
 		if (is_spooling && live_ramp_time_ms > 0) {
 			if (ramp_elapsed_ms < live_ramp_time_ms) {
 				ramp_elapsed_ms += 1;
-				// Pure integer multiplication and division: bypasses heavy floating-point libraries entirely
-				input = (int)(((uint64_t)input * ramp_elapsed_ms) / live_ramp_time_ms);
+				// Pure 32-bit math: prevents loading heavy 64-bit compiler routines
+				input = (int)(((uint32_t)input * ramp_elapsed_ms) / live_ramp_time_ms);
 			} else {
 				is_spooling = 0;
 			}
