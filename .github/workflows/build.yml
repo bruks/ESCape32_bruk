@@ -6,9 +6,10 @@ jobs:
     steps:
     - uses: carlosperate/arm-none-eabi-gcc-action@v1
     - uses: actions/checkout@v4
-    - run: |
+    - name: Run Compiler Matrix
+      run: |
         git clone https://github.com
-        make -C libopencm3 TARGETS='stm32/f0 stm32/g0 stm32/g4 stm32/l4'
+        make -C libopencm3 TARGETS="stm32/f0 stm32/g0 stm32/g4 stm32/l4"
         cmake -B build -D LIBOPENCM3_DIR=libopencm3
         cd build
         make AART1 AIRBOT1 FLYCOLOR1 REPTILE1
