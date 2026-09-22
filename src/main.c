@@ -662,28 +662,30 @@ void main(void) {
 		int input = rearm ? 0 : throt;
 
 		// --- DYNAMIC HELI SOFT START BLOCK ---
-		#if defined AT32F4 || defined STM32G4
-		static uint32_t ramp_elapsed_ms = 0;
+		static uint32_t start_tick = 0;
 		static int is_spooling = 0;
 		
-		uint32_t live_ramp_time_ms = cfg.heli_ramp * 1000; 
+		// Conversions: Converts your slider setting (seconds) directly into system ticks
+		uint32_t live_ramp_ticks = cfg.heli_ramp * 1000; 
 
-		if (input <= 0 || live_ramp_time_ms == 0) {
+		if (input <= 0 || live_ramp_ticks == 0) {
 			is_spooling = 0;
-			ramp_elapsed_ms = 0;
-		} else if (input > 0 && is_spooling == 0 && ramp_elapsed_ms == 0) {
+			start_tick = 0;
+		} else if (input > 0 && is_spooling == 0 && start_tick == 0) {
 			is_spooling = 1;
+			start_tick = tick; // Saves the exact system clock tick when you unlock
 		}
 
-		if (is_spooling && live_ramp_time_ms > 0) {
-			if (ramp_elapsed_ms < live_ramp_time_ms) {
-				ramp_elapsed_ms += 1;
-				input = (int)(((uint32_t)input * ramp_elapsed_ms) / live_ramp_time_ms);
+		if (is_spooling && live_ramp_ticks > 0) {
+			uint32_t ticks_passed = tick - start_tick; // Tracks absolute real time passed
+
+			if (ticks_passed < live_ramp_ticks) {
+				// Scales power linearly using the master system clock
+				input = (int)(((uint32_t)input * ticks_passed) / live_ramp_ticks);
 			} else {
-				is_spooling = 0;
+				is_spooling = 0; // Hand off direct 1:1 control back to the flight controller
 			}
 		}
-		#endif
 		// -------------------------------------
 		int range = cfg.sine_range * 20;
 		int delta = range ? 10 : 0;
