@@ -665,7 +665,6 @@ void main(void) {
 		static uint32_t ramp_elapsed_ms = 0;
 		static int is_spooling = 0;
 		
-		// Conversions: pulls slider seconds from the web dashboard panel, scales to millisecond ticks
 		uint32_t live_ramp_time_ms = cfg.heli_ramp * 1000; 
 
 		if (input <= 0 || live_ramp_time_ms == 0) {
@@ -678,8 +677,8 @@ void main(void) {
 		if (is_spooling && live_ramp_time_ms > 0) {
 			if (ramp_elapsed_ms < live_ramp_time_ms) {
 				ramp_elapsed_ms += 1;
-				float factor = (float)ramp_elapsed_ms / (float)live_ramp_time_ms;
-				input = (int)(input * factor);
+				// Pure integer multiplication and division: bypasses heavy floating-point libraries entirely
+				input = (int)(((uint64_t)input * ramp_elapsed_ms) / live_ramp_time_ms);
 			} else {
 				is_spooling = 0;
 			}
