@@ -65,7 +65,7 @@
 	XX(44, val, beacon,      BEACON,      "%",                                              0,    0,  100,  0, 0, 0) \
 	XX(45, val, bec,         BEC,         "5.5V;6.5V;7.4V;8.4V;12V",                       -1,    0,    4,  0, 0, 0) \
 	XX(46, val, led,         LED,         "",                                               0,    0,   15,  0, 0, 0) \
-	XX(47, val, heli_ramp,   47,          "s",                                              0,    0,   60,  0, 0, 0)
+	XX(47, val, heli_ramp,   47,          "s",                                              0,    0,   300,  0, 0, 0)
 
 #define PARAM_CNT 48
 
