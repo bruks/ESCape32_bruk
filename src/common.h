@@ -106,11 +106,7 @@ typedef struct {
 	char beacon;
 	char bec;
 	char led;
-#if defined AT32F4 || defined STM32G4
 	uint8_t heli_ramp;
-#else
-	uint8_t heli_ramp:0; // Allocates zero bits of physical flash memory space on tiny legacy chips
-#endif
 } Cfg;
 
 typedef struct {
