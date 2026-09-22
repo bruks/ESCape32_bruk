@@ -766,9 +766,10 @@ void main(void) {
 
 		// --- FINAL HELI SOFT START INTERCEPT GATE ---
 		static uint32_t heli_loops = 0;
-		uint32_t total_target_loops = (uint32_t)(cfg.heli_ramp * 1000); 
+		
+		// Increased multiplier to 3000 to stretch the timeline under zero-load bench conditions
+		uint32_t total_target_loops = (uint32_t)(cfg.heli_ramp * 3000); 
 
-		// Establish the physical floor using the dashboard's spin-up power parameter
 		int power_floor = (int)cfg.duty_spup * 20;
 
 		if (curduty <= power_floor || total_target_loops == 0) {
@@ -776,11 +777,9 @@ void main(void) {
 		} else if (curduty > power_floor && heli_loops < total_target_loops) {
 			heli_loops++;
 			
-			// Calculate the remaining target range above the floor
 			int power_range = curduty - power_floor;
 			int ramped_increase = (int)(((uint64_t)power_range * heli_loops) / total_target_loops);
 			
-			// Add the ramp cleanly on top of the physical starting floor
 			curduty = power_floor + ramped_increase;
 		}
 		// --------------------------------------------
