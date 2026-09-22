@@ -12,7 +12,7 @@ jobs:
         make -C libopencm3 TARGETS="stm32/f0 stm32/g0 stm32/g4 stm32/l4"
         cmake -B build -D LIBOPENCM3_DIR=libopencm3
         cd build
-        make AART1 AIRBOT1 FLYCOLOR1 REPTILE1
+        make AART1
     - uses: actions/upload-artifact@v4
       with:
         name: escape32-build
