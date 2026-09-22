@@ -662,6 +662,7 @@ void main(void) {
 		int input = rearm ? 0 : throt;
 
 		// --- DYNAMIC HELI SOFT START BLOCK ---
+		#if defined AT32F4 || defined STM32G4
 		static uint32_t ramp_elapsed_ms = 0;
 		static int is_spooling = 0;
 		
@@ -677,12 +678,12 @@ void main(void) {
 		if (is_spooling && live_ramp_time_ms > 0) {
 			if (ramp_elapsed_ms < live_ramp_time_ms) {
 				ramp_elapsed_ms += 1;
-				// Pure 32-bit math: prevents loading heavy 64-bit compiler routines
 				input = (int)(((uint32_t)input * ramp_elapsed_ms) / live_ramp_time_ms);
 			} else {
 				is_spooling = 0;
 			}
 		}
+		#endif
 		// -------------------------------------
 		int range = cfg.sine_range * 20;
 		int delta = range ? 10 : 0;
