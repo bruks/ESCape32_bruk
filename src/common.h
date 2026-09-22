@@ -106,7 +106,9 @@ typedef struct {
 	char beacon;
 	char bec;
 	char led;
+#if defined AT32F4 || defined STM32G4
 	uint8_t heli_ramp;
+#endif
 } Cfg;
 
 typedef struct {
