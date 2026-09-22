@@ -660,33 +660,6 @@ void main(void) {
 	for (int curduty = 0, running = 0, braking = 2, boost = 0, choke = 0, n = 0;;) {
 		int ccr, arr = CLK_KHZ / cfg.freq_min;
 		int input = rearm ? 0 : throt;
-
-		// --- DEFINITIVE HELI SOFT START BLOCK ---
-		static uint32_t loop_counter = 0;
-		static int is_spooling = 0;
-		
-		// Map the slider value directly to loop cycles.
-		// ESCape32 processes roughly 1000 main input loops per second.
-		uint32_t target_cycles = (uint32_t)(cfg.heli_ramp * 1000); 
-
-		if (input <= 0 || target_cycles == 0) {
-			is_spooling = 0;
-			loop_counter = 0;
-		} else if (input > 0 && is_spooling == 0 && loop_counter == 0) {
-			is_spooling = 1;
-			loop_counter = 1; // Starts counting cycles sequentially
-		}
-
-		if (is_spooling && target_cycles > 0) {
-			if (loop_counter < target_cycles) {
-				loop_counter++;
-				// Linear power distribution step-up based purely on sequence loops
-				input = (int)(((uint32_t)input * loop_counter) / target_cycles);
-			} else {
-				is_spooling = 0; // Soft start finished, hand 1:1 control back to Flywing
-			}
-		}
-		// ----------------------------------------
 		int range = cfg.sine_range * 20;
 		int delta = range ? 10 : 0;
 		int newduty = 0;
@@ -790,6 +763,19 @@ void main(void) {
 		TIM1_CCR3 = ccr;
 		TIM1_CR1 = TIM_CR1_CEN | TIM_CR1_ARPE;
 	skipduty:
+
+		// --- FINAL HELI SOFT START INTERCEPT GATE ---
+		static uint32_t heli_loops = 0;
+		uint32_t total_target_loops = (uint32_t)(cfg.heli_ramp * 1000); 
+
+		if (curduty <= 0 || total_target_loops == 0) {
+			heli_loops = 0;
+		} else if (curduty > 0 && heli_loops < total_target_loops) {
+			heli_loops++;
+			curduty = (int)(((uint64_t)curduty * heli_loops) / total_target_loops);
+		}
+		// --------------------------------------------
+		
 		if (running && !step) { // Start motor
 			if (brushed) {
 				int m1 = TIM_CCMR1_OC1PE | TIM_CCMR1_OC2PE;
