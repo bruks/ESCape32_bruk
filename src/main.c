@@ -661,32 +661,32 @@ void main(void) {
 		int ccr, arr = CLK_KHZ / cfg.freq_min;
 		int input = rearm ? 0 : throt;
 
-		// --- DYNAMIC HELI SOFT START BLOCK ---
-		static uint32_t start_tick = 0;
+		// --- DEFINITIVE HELI SOFT START BLOCK ---
+		static uint32_t loop_counter = 0;
 		static int is_spooling = 0;
 		
-		// Conversions: Converts your slider setting (seconds) directly into system ticks
-		uint32_t live_ramp_ticks = cfg.heli_ramp * 1000; 
+		// Map the slider value directly to loop cycles.
+		// ESCape32 processes roughly 1000 main input loops per second.
+		uint32_t target_cycles = (uint32_t)(cfg.heli_ramp * 1000); 
 
-		if (input <= 0 || live_ramp_ticks == 0) {
+		if (input <= 0 || target_cycles == 0) {
 			is_spooling = 0;
-			start_tick = 0;
-		} else if (input > 0 && is_spooling == 0 && start_tick == 0) {
+			loop_counter = 0;
+		} else if (input > 0 && is_spooling == 0 && loop_counter == 0) {
 			is_spooling = 1;
-			start_tick = tick; // Saves the exact system clock tick when you unlock
+			loop_counter = 1; // Starts counting cycles sequentially
 		}
 
-		if (is_spooling && live_ramp_ticks > 0) {
-			uint32_t ticks_passed = tick - start_tick; // Tracks absolute real time passed
-
-			if (ticks_passed < live_ramp_ticks) {
-				// Scales power linearly using the master system clock
-				input = (int)(((uint32_t)input * ticks_passed) / live_ramp_ticks);
+		if (is_spooling && target_cycles > 0) {
+			if (loop_counter < target_cycles) {
+				loop_counter++;
+				// Linear power distribution step-up based purely on sequence loops
+				input = (int)(((uint32_t)input * loop_counter) / target_cycles);
 			} else {
-				is_spooling = 0; // Hand off direct 1:1 control back to the flight controller
+				is_spooling = 0; // Soft start finished, hand 1:1 control back to Flywing
 			}
 		}
-		// -------------------------------------
+		// ----------------------------------------
 		int range = cfg.sine_range * 20;
 		int delta = range ? 10 : 0;
 		int newduty = 0;
