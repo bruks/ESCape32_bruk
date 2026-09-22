@@ -41,19 +41,19 @@ const Cfg cfgdata = {
 	.duty_rate = DUTY_RATE,     // Duty cycle slew rate (0.1%/ms) [1..100]
 	.duty_drag = DUTY_DRAG,     // Drag brake power (%) [0..100]
 	.duty_lock = DUTY_LOCK,     // Active drag brake (0 - off, 1 - soft, 2 - hard)
-	.throt_mode = THROT_MODE,   // Throttle mode (0 - forward, 1 - forward/reverse, 2 - forward/brake/reverse, 3 - forward/brake)
-	.throt_rev = THROT_REV,     // Maximum reverse throttle (0 - 100%, 1 - 75%, 2 - 50%, 3 - 25%)
+	.throt_mode = THROT_MODE,   //  mode (0 - forward, 1 - forward/reverse, 2 - forward/brake/reverse, 3 - forward/brake)
+	.throt_rev = THROT_REV,     // Maximum reverse  (0 - 100%, 1 - 75%, 2 - 50%, 3 - 25%)
 	.throt_brk = THROT_BRK,     // Maximum brake power (%) [0..100]
-	.throt_set = THROT_SET,     // Preset throttle (%) [0..100]
-	.throt_ztc = THROT_ZTC,     // Zero-throttle coasting
-	.throt_cal = THROT_CAL,     // Automatic throttle calibration
-	.throt_min = THROT_MIN,     // Minimum throttle setpoint (us)
-	.throt_mid = THROT_MID,     // Middle throttle setpoint (us)
-	.throt_max = THROT_MAX,     // Maximum throttle setpoint (us)
-	.analog_min = ANALOG_MIN,   // Minimum analog throttle setpoint (mV)
-	.analog_max = ANALOG_MAX,   // Maximum analog throttle setpoint (mV)
+	.throt_set = THROT_SET,     // Preset  (%) [0..100]
+	.throt_ztc = THROT_ZTC,     // Zero- coasting
+	.throt_cal = THROT_CAL,     // Automatic  calibration
+	.throt_min = THROT_MIN,     // Minimum  setpoint (us)
+	.throt_mid = THROT_MID,     // Middle  setpoint (us)
+	.throt_max = THROT_MAX,     // Maximum  setpoint (us)
+	.analog_min = ANALOG_MIN,   // Minimum analog  setpoint (mV)
+	.analog_max = ANALOG_MAX,   // Maximum analog  setpoint (mV)
 	.input_mode = INPUT_MODE,   // Input mode (0 - servo/Oneshot125/DSHOT, 1 - analog, 2 - serial, 3 - iBUS, 4 - SBUS/SBUS2, 5 - CRSF, 6 - EXBUS, 7 - HoTT)
-	.input_ch1 = INPUT_CH1,     // Throttle channel [0 - off, 1..32]
+	.input_ch1 = INPUT_CH1,     //  channel [0 - off, 1..32]
 	.input_ch2 = INPUT_CH2,     // Auxiliary channel [0 - off, 1..32]
 	.telem_mode = TELEM_MODE,   // Telemetry mode (0 - KISS, 1 - KISS auto, 2 - iBUS, 3 - S.Port, 4 - CRSF, 5 - MSB, 6 - HoTT)
 	.telem_phid = TELEM_PHID,   // Telemetry physical ID [0 - off, 1..2 - iBUS/MSB, 1..4 - SBUS2, 1..8 - CRSF, 1..28 - S.Port]
@@ -185,7 +185,7 @@ static void nextstep(void) {
 	int m2 = TIM_CCMR2_OC3PE | TIM_CCMR2_OC4PE | TIM_CCMR2_OC4M_PWM1;
 	int er = TIM_CCER_CC4E;
 #endif
-	if (cfg.throt_ztc && !throt) p = n = 0; // Zero-throttle coasting
+	if (cfg.throt_ztc && !throt) p = n = 0; // Zero- coasting
 	if (p & 1) {
 		m1 |= TIM_CCMR1_OC1M_PWM1;
 #ifdef PWM_ENABLE
