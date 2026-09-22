@@ -11,7 +11,26 @@ jobs:
         make -C libopencm3 TARGETS='stm32/f0 stm32/g0 stm32/g4 stm32/l4'
         cmake -B build -D LIBOPENCM3_DIR=libopencm3
         cd build
-        make
+        name: Build ESCape32
+on: workflow_dispatch
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: carlosperate/arm-none-eabi-gcc-action@v1
+    - uses: actions/checkout@v4
+    - run: |
+        git clone https://github.com/libopencm3/libopencm3.git
+        make -C libopencm3 TARGETS='stm32/f0 stm32/g0 stm32/g4 stm32/l4'
+        cmake -B build -D LIBOPENCM3_DIR=libopencm3
+        cd build
+        make AART1 AIRBOT1 FLYCOLOR1 REPTILE1
+    - uses: actions/upload-artifact@v4
+      with:
+        name: escape32-build
+        path: build/**/*.bin
+        retention-days: 7
+
     - uses: actions/upload-artifact@v4
       with:
         name: escape32-build
