@@ -106,6 +106,7 @@ typedef struct {
 	char beacon;
 	char bec;
 	char led;
+	uint8_t heli_ramp;
 } Cfg;
 
 typedef struct {
