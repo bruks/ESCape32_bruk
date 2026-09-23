@@ -527,6 +527,9 @@ void checkcfg(void) {
 	cfg.bec = 0;
 #endif
 	cfg.led &= (1 << LED_CNT) - 1;
+	cfg.heli_ramp = cfg.brushed ? 0 : min(cfg.heli_ramp, 60);
+	cfg.heli_bail_time = min(cfg.heli_bail_time, 60);
+	cfg.heli_bail_ramp = clamp(cfg.heli_bail_ramp, 500, clamp(cfg.heli_ramp * 1000, 500, 10000)); // Never slower than the soft start
 }
 
 int savecfg(void) {

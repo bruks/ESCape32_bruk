@@ -154,7 +154,7 @@
 #define THROT_MODE 0
 #endif
 #ifndef THROT_ZTC
-#define THROT_ZTC 0
+#define THROT_ZTC 1 // Heli: freewheel at zero throttle (throttle hold)
 #endif
 #ifndef THROT_REV
 #define THROT_REV 0
@@ -246,4 +246,16 @@
 #endif
 #ifndef LED
 #define LED 0
+#endif
+
+// Helicopter defaults
+
+#ifndef HELI_RAMP
+#define HELI_RAMP 15
+#endif
+#ifndef HELI_BAIL_TIME
+#define HELI_BAIL_TIME 10
+#endif
+#ifndef HELI_BAIL_RAMP
+#define HELI_BAIL_RAMP 1500
 #endif

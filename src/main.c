@@ -72,6 +72,9 @@ const Cfg cfgdata = {
 	.beacon = BEACON,           // Beacon volume (%) [0..100]
 	.bec = BEC,                 // BEC voltage (0 - 5.5V, 1 - 6.5V, 2 - 7.4V, 3 - 8.4V, 4 - 12V)
 	.led = LED,                 // LED on/off bits [0..15]
+	.heli_ramp = HELI_RAMP,           // Heli soft start time (s) [0 - off, 1..60]
+	.heli_bail_time = HELI_BAIL_TIME, // Heli bailout window after throttle cut (s) [0 - off, 1..60]
+	.heli_bail_ramp = HELI_BAIL_RAMP, // Heli bailout re-spool time (ms) [500..10000]
 };
 
 __attribute__((__section__(".cfg")))
@@ -555,6 +558,55 @@ static int park(void) {
 }
 #endif
 
+/*
+Helicopter soft start (Hobbywing Platinum style)
+
+Shapes the THROTTLE INPUT, not the duty cycle, so everything downstream
+(sine startup, 6-step handover, duty_spup/duty_ramp, slew limiter, current
+and temperature protection) keeps working unchanged.
+
+- First spool-up: input rises linearly from 0 to the commanded value over
+  heli_ramp seconds, regardless of the commanded level (70% from the H1
+  takes the full heli_ramp time).
+- Throttle cut while flying, restored within heli_bail_time seconds while
+  the ESC is still tracking the rotor: fast re-spool over heli_bail_ramp ms.
+- Any restart with the rotor still turning begins at the throttle level
+  that matches the current rotor speed, so the ESC never brakes a coasting
+  rotor (active freewheeling would otherwise regen-brake it).
+*/
+static int helistart(int input, int running) {
+	static char state, bail; // State: 0 - idle, 1 - spooling, 2 - flying, 3 - throttle cut
+	static int base, span, last, cutin, cuterpm;
+	static uint32_t t0;
+	if (!cfg.heli_ramp || input < 0) { // Disabled or reverse
+		state = 0;
+		return input;
+	}
+	if (!input) { // Throttle cut / disarmed
+		if (state == 1 || state == 2) {
+			bail = state == 2; // Bailout only after a completed spool-up
+			cutin = last;
+			cuterpm = erpm;
+			t0 = tick;
+			state = 3;
+		}
+		return 0;
+	}
+	if (state == 0 || state == 3) { // (Re)start
+		int quick = state == 3 && bail && running && tick - t0 < cfg.heli_bail_time * 16000u;
+		base = state == 3 && running && cuterpm > 0 ? min(cutin * min(erpm, cuterpm) / cuterpm, input) : 0; // Match rotor speed
+		span = quick ? cfg.heli_bail_ramp : cfg.heli_ramp * 1000;
+		t0 = tick;
+		state = 1;
+	}
+	if (state == 1) { // Spooling
+		int ms = (tick - t0) >> 4; // 16kHz tick -> ms
+		if (ms < span) return last = min(base + (input - base) * ms / span, input);
+		state = 2;
+	}
+	return last = input;
+}
+
 void main(void) {
 	memcpy(_cfg_start, _cfg, _cfg_end - _cfg_start); // Copy configuration to SRAM
 	checkcfg();
@@ -659,7 +711,7 @@ void main(void) {
 #endif
 	for (int curduty = 0, running = 0, braking = 2, boost = 0, choke = 0, n = 0;;) {
 		int ccr, arr = CLK_KHZ / cfg.freq_min;
-		int input = rearm ? 0 : throt;
+		int input = helistart(rearm ? 0 : throt, running);
 		int range = cfg.sine_range * 20;
 		int delta = range ? 10 : 0;
 		int newduty = 0;
@@ -763,27 +815,6 @@ void main(void) {
 		TIM1_CCR3 = ccr;
 		TIM1_CR1 = TIM_CR1_CEN | TIM_CR1_ARPE;
 	skipduty:
-
-		// --- FINAL HELI SOFT START INTERCEPT GATE ---
-		static uint32_t heli_loops = 0;
-		
-		// Increased multiplier to 3000 to stretch the timeline under zero-load bench conditions
-		uint32_t total_target_loops = (uint32_t)(cfg.heli_ramp * 3000); 
-
-		int power_floor = (int)cfg.duty_spup * 20;
-
-		if (curduty <= power_floor || total_target_loops == 0) {
-			heli_loops = 0;
-		} else if (curduty > power_floor && heli_loops < total_target_loops) {
-			heli_loops++;
-			
-			int power_range = curduty - power_floor;
-			int ramped_increase = (int)(((uint64_t)power_range * heli_loops) / total_target_loops);
-			
-			curduty = power_floor + ramped_increase;
-		}
-		// --------------------------------------------
-		
 		if (running && !step) { // Start motor
 			if (brushed) {
 				int m1 = TIM_CCMR1_OC1PE | TIM_CCMR1_OC2PE;

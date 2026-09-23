@@ -107,6 +107,8 @@ typedef struct {
 	char bec;
 	char led;
 	uint8_t heli_ramp;
+	uint8_t heli_bail_time;
+	uint16_t heli_bail_ramp;
 } Cfg;
 
 typedef struct {
