@@ -527,9 +527,11 @@ void checkcfg(void) {
 	cfg.bec = 0;
 #endif
 	cfg.led &= (1 << LED_CNT) - 1;
-	cfg.heli_ramp = cfg.brushed ? 0 : min(cfg.heli_ramp, 60);
-	cfg.heli_bail_time = min(cfg.heli_bail_time, 60);
-	cfg.heli_bail_ramp = clamp(cfg.heli_bail_ramp, 500, clamp(cfg.heli_ramp * 1000, 500, 10000)); // Never slower than the soft start
+	// Helicopter spool-up and bailout (see docs/heli.md)
+	cfg.heli_spoolup_sec = cfg.brushed ? 0 : min(cfg.heli_spoolup_sec, 60); // Not used with brushed motors
+	cfg.heli_bail_window_sec = min(cfg.heli_bail_window_sec, 60);
+	// A bailout is never slower than a normal spool-up
+	cfg.heli_bail_spool_ms = clamp(cfg.heli_bail_spool_ms, 500, clamp(cfg.heli_spoolup_sec * 1000, 500, 10000));
 }
 
 int savecfg(void) {

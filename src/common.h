@@ -106,9 +106,10 @@ typedef struct {
 	char beacon;
 	char bec;
 	char led;
-	uint8_t heli_ramp;
-	uint8_t heli_bail_time;
-	uint16_t heli_bail_ramp;
+	// Helicopter spool-up and bailout (see docs/heli.md), appended to keep stock layout
+	uint8_t heli_spoolup_sec;     // Spool-up time from a stop (s), 0 = off
+	uint8_t heli_bail_window_sec; // Bailout window after a throttle cut (s), 0 = off
+	uint16_t heli_bail_spool_ms;  // Bailout re-spool time (ms)
 } Cfg;
 
 typedef struct {

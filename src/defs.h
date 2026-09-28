@@ -154,7 +154,7 @@
 #define THROT_MODE 0
 #endif
 #ifndef THROT_ZTC
-#define THROT_ZTC 1 // Heli: freewheel at zero throttle (throttle hold)
+#define THROT_ZTC 1 // On for heli: rotor coasts freely in throttle hold
 #endif
 #ifndef THROT_REV
 #define THROT_REV 0
@@ -248,14 +248,14 @@
 #define LED 0
 #endif
 
-// Helicopter defaults
+// Helicopter (see docs/heli.md)
 
-#ifndef HELI_RAMP
-#define HELI_RAMP 15
+#ifndef HELI_SPOOLUP_SEC
+#define HELI_SPOOLUP_SEC 15 // Spool-up time from a stop (s) [0 - off, 1..60]
 #endif
-#ifndef HELI_BAIL_TIME
-#define HELI_BAIL_TIME 10
+#ifndef HELI_BAIL_WINDOW_SEC
+#define HELI_BAIL_WINDOW_SEC 10 // Bailout window after a throttle cut (s) [0 - off, 1..60]
 #endif
-#ifndef HELI_BAIL_RAMP
-#define HELI_BAIL_RAMP 1500
+#ifndef HELI_BAIL_SPOOL_MS
+#define HELI_BAIL_SPOOL_MS 1500 // Bailout re-spool time (ms) [500..10000]
 #endif

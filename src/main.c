@@ -72,9 +72,10 @@ const Cfg cfgdata = {
 	.beacon = BEACON,           // Beacon volume (%) [0..100]
 	.bec = BEC,                 // BEC voltage (0 - 5.5V, 1 - 6.5V, 2 - 7.4V, 3 - 8.4V, 4 - 12V)
 	.led = LED,                 // LED on/off bits [0..15]
-	.heli_ramp = HELI_RAMP,           // Heli soft start time (s) [0 - off, 1..60]
-	.heli_bail_time = HELI_BAIL_TIME, // Heli bailout window after throttle cut (s) [0 - off, 1..60]
-	.heli_bail_ramp = HELI_BAIL_RAMP, // Heli bailout re-spool time (ms) [500..10000]
+	// Helicopter spool-up and bailout (see docs/heli.md)
+	.heli_spoolup_sec = HELI_SPOOLUP_SEC,         // Spool-up time from a stop (s) [0 - off, 1..60]
+	.heli_bail_window_sec = HELI_BAIL_WINDOW_SEC, // Bailout window after a throttle cut (s) [0 - off, 1..60]
+	.heli_bail_spool_ms = HELI_BAIL_SPOOL_MS,     // Bailout re-spool time (ms) [500..10000]
 };
 
 __attribute__((__section__(".cfg")))
@@ -559,52 +560,66 @@ static int park(void) {
 #endif
 
 /*
-Helicopter soft start (Hobbywing Platinum style)
+Helicopter spool-up and bailout (see docs/heli.md)
 
-Shapes the THROTTLE INPUT, not the duty cycle, so everything downstream
-(sine startup, 6-step handover, duty_spup/duty_ramp, slew limiter, current
-and temperature protection) keeps working unchanged.
+Filters the throttle input before anything else sees it, so sine startup, the 6-step
+handover, duty_spup/duty_ramp, the duty_rate slew limiter and all protections keep
+working unchanged. (Rewriting the duty cycle instead fights the slew limiter.)
+The output ramps linearly from 'base' to the current input over 'span' ms:
 
-- First spool-up: input rises linearly from 0 to the commanded value over
-  heli_ramp seconds, regardless of the commanded level (70% from the H1
-  takes the full heli_ramp time).
-- Throttle cut while flying, restored within heli_bail_time seconds while
-  the ESC is still tracking the rotor: fast re-spool over heli_bail_ramp ms.
-- Any restart with the rotor still turning begins at the throttle level
-  that matches the current rotor speed, so the ESC never brakes a coasting
-  rotor (active freewheeling would otherwise regen-brake it).
+  HS_IDLE     -> HS_SPOOLING  Throttle applied: full spool-up over heli_spoolup_sec
+  HS_SPOOLING -> HS_FLYING    Ramp finished: input passes straight through
+  HS_SPOOLING/
+  HS_FLYING   -> HS_CUT       Throttle cut (hold/disarm): remember throttle and eRPM
+  HS_CUT      -> HS_SPOOLING  Bailout over heli_bail_spool_ms if the cut came after a
+                              complete spool-up, throttle returned within
+                              heli_bail_window_sec and the rotor is still tracked;
+                              otherwise a full spool-up
+
+If the rotor is still turning, the ramp starts from the throttle matching its current
+speed (throttle_at_cut * erpm / erpm_at_cut), so a coasting rotor is never braked.
 */
-static int helistart(int input, int running) {
-	static char state, bail; // State: 0 - idle, 1 - spooling, 2 - flying, 3 - throttle cut
-	static int base, span, last, cutin, cuterpm;
-	static uint32_t t0;
-	if (!cfg.heli_ramp || input < 0) { // Disabled or reverse
-		state = 0;
+enum {HS_IDLE, HS_SPOOLING, HS_FLYING, HS_CUT};
+
+static int helispoolup(int input, int running) {
+	static char state = HS_IDLE;
+	static char wasflying; // Cut happened after a completed spool-up (bailout allowed)
+	static int base;       // Throttle the current ramp starts from [0..2000]
+	static int span;       // Length of the current ramp (ms)
+	static int last;       // Last throttle we output, remembered at a cut
+	static int cutthrot;   // Throttle we were outputting when it was cut
+	static int cuterpm;    // Rotor eRPM at the moment of the cut
+	static uint32_t t0;    // SysTick when the current ramp (or cut) started
+	if (!cfg.heli_spoolup_sec || input < 0) { // Feature off, or reverse throttle: pass through
+		state = HS_IDLE;
 		return input;
 	}
-	if (!input) { // Throttle cut / disarmed
-		if (state == 1 || state == 2) {
-			bail = state == 2; // Bailout only after a completed spool-up
-			cutin = last;
+	if (!input) { // Throttle cut (throttle hold) or disarmed
+		if (state == HS_SPOOLING || state == HS_FLYING) {
+			wasflying = state == HS_FLYING;
+			cutthrot = last;
 			cuterpm = erpm;
-			t0 = tick;
-			state = 3;
+			t0 = tick; // Start of the bailout window
+			state = HS_CUT;
 		}
 		return 0;
 	}
-	if (state == 0 || state == 3) { // (Re)start
-		int quick = state == 3 && bail && running && tick - t0 < cfg.heli_bail_time * 16000u;
-		base = state == 3 && running && cuterpm > 0 ? min(cutin * min(erpm, cuterpm) / cuterpm, input) : 0; // Match rotor speed
-		span = quick ? cfg.heli_bail_ramp : cfg.heli_ramp * 1000;
+	if (state == HS_IDLE || state == HS_CUT) { // Throttle applied: start a new ramp
+		int cut = state == HS_CUT;
+		int inwindow = tick - t0 < cfg.heli_bail_window_sec * 16000u; // 16000 ticks per second
+		int bailout = cut && wasflying && running && inwindow;
+		// Rotor still turning: start from the throttle matching its current speed (never above target)
+		base = cut && running && cuterpm > 0 ? min(cutthrot * min(erpm, cuterpm) / cuterpm, input) : 0;
+		span = bailout ? cfg.heli_bail_spool_ms : cfg.heli_spoolup_sec * 1000;
 		t0 = tick;
-		state = 1;
+		state = HS_SPOOLING;
 	}
-	if (state == 1) { // Spooling
-		int ms = (tick - t0) >> 4; // 16kHz tick -> ms
-		if (ms < span) return last = min(base + (input - base) * ms / span, input);
-		state = 2;
+	if (state == HS_SPOOLING) {
+		int ms = (tick - t0) >> 4; // 16 kHz ticks -> ms
+		if (ms < span) return last = min(base + (input - base) * ms / span, input); // Linear ramp (2000 * 60000 < 2^31, no overflow)
+		state = HS_FLYING; // Ramp finished
 	}
-	return last = input;
+	return last = input; // Flying: throttle passes straight through
 }
 
 void main(void) {
@@ -711,7 +726,8 @@ void main(void) {
 #endif
 	for (int curduty = 0, running = 0, braking = 2, boost = 0, choke = 0, n = 0;;) {
 		int ccr, arr = CLK_KHZ / cfg.freq_min;
-		int input = helistart(rearm ? 0 : throt, running);
+		// Heli spool-up/bailout: shape throttle before startup, slew limiter and protections
+		int input = helispoolup(rearm ? 0 : throt, running);
 		int range = cfg.sine_range * 20;
 		int delta = range ? 10 : 0;
 		int newduty = 0;

@@ -18,17 +18,17 @@
 #include "common.h"
 
 #define CFG_MAP(XX) \
-	/* ---- Helicopter ---- */ \
-	XX( 0, val, heli_ramp,   HELI_RAMP,   "s",                                              0,    0,   60,  0, cfg.brushed, 0) \
-	XX( 1, val, heli_bail_time, HELI_BAIL_TIME, "s",                                     0,    0,   60,  0, cfg.brushed, 0) \
-	XX( 2, val, heli_bail_ramp, HELI_BAIL_RAMP, "ms",                                    0,  500, 10000, 100, cfg.brushed, 0) \
+	/* Helicopter (see docs/heli.md) */ \
+	XX( 0, val, heli_spoolup_sec, HELI_SPOOLUP_SEC, "s",                                 0,    0,   60,  0, cfg.brushed, 0) \
+	XX( 1, val, heli_bail_window_sec, HELI_BAIL_WINDOW_SEC, "s",                         0,    0,   60,  0, cfg.brushed, 0) \
+	XX( 2, val, heli_bail_spool_ms, HELI_BAIL_SPOOL_MS, "ms",                            0,  500, 10000, 100, cfg.brushed, 0) \
 	XX( 3, val, sine_range,  SINE_RANGE,  "%",                                              0,    0,   25,  0, cfg.brushed, 0) \
 	XX( 4, val, sine_power,  SINE_POWER,  "%",                                              0,    1,   15,  0, cfg.brushed, 0) \
 	XX( 5, val, duty_min,    DUTY_MIN,    "%",                                              0,    1,  100,  0, 0, 0) \
 	XX( 6, val, throt_mode,  THROT_MODE,  "fwd;fwd/rev;fwd/brk/rev;fwd/brk",               -1,    0,    3,  0, 0, rearm = 1) \
 	XX( 7, val, throt_brk,   THROT_BRK,   "%",                                              0,    0,  100,  0, 0, 0) \
 	XX( 8, val, throt_ztc,   THROT_ZTC,   "off;on",                                        -1,    0,    1,  0, cfg.brushed, 0) \
-	/* ---- General ---- */ \
+	/* General */ \
 	XX( 9, val, arm,         ARM,         "off;on",                                        -1,    0,    1,  0, 0, 0) \
 	XX(10, val, damp,        DAMP,        "off;on",                                        -1,    0,    1,  0, 0, 0) \
 	XX(11, val, revdir,      REVDIR,      "off;on",                                        -1,    0,    1,  0, 0, 0) \
