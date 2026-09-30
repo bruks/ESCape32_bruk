@@ -18,14 +18,18 @@
 /*
 ** Modified 2026 by Bruk: added helicopter soft start / spool-up
 ** (heli_spoolup_sec, heli_bail_window_sec, heli_bail_spool_ms).
-** Unofficial fork, not part of upstream ESCape32.
+** Unofficial fork, not part of upstream ESCape32. See docs/heli.md.
+**
+** Changes in this file:
+** - helispoolup(): spool-up and bailout logic, called at the top of the main loop
+** - Heli settings defaults in cfgdata
+** - REVPATCH 50 (fork version 17.50, based on upstream 17.2)
 */
-
 
 #include "common.h"
 
 #define REVISION 17
-#define REVPATCH 50
+#define REVPATCH 50 // Fork version 17.50 (upstream 17.2 + heli spool-up)
 
 const Cfg cfgdata = {
 	.id = 0x32ea,

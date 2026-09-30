@@ -15,6 +15,15 @@
 ** along with this firmware. If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+** Modified 2026 by Bruk: added helicopter soft start / spool-up
+** (heli_spoolup_sec, heli_bail_window_sec, heli_bail_spool_ms).
+** Unofficial fork, not part of upstream ESCape32. See docs/heli.md.
+**
+** Changes in this file:
+** - Range checks for the heli settings in checkcfg()
+*/
+
 #include "common.h"
 
 #ifndef HALL_MAP

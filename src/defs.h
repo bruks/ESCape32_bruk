@@ -15,6 +15,16 @@
 ** along with this firmware. If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+** Modified 2026 by Bruk: added helicopter soft start / spool-up
+** (heli_spoolup_sec, heli_bail_window_sec, heli_bail_spool_ms).
+** Unofficial fork, not part of upstream ESCape32. See docs/heli.md.
+**
+** Changes in this file:
+** - Heli defaults: 15 s spool-up, 10 s bailout window, 1500 ms bailout re-spool
+** - THROT_ZTC default changed to 1 (on) for heli throttle hold
+*/
+
 #pragma once
 
 #if DEAD_TIME < 128
