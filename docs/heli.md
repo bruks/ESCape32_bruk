@@ -10,7 +10,7 @@ Many heli flight controllers send a fixed throttle target the moment the model i
 
 | Setting | Recommended | Why |
 |---|---|---|
-| `heli_spoolup_sec` | 20–25 | Time for the head to reach speed after arming |
+| `heli_spoolup_sec` | 10–20 | Time for the head to reach speed after arming |
 | `heli_bail_window_sec` | 5–10 | How long after a throttle cut a quick recovery is allowed |
 | `heli_bail_spool_ms` | 1000–2000 | How fast power returns during that recovery |
 | `sine_range` | 5–8 | Lets the motor turn slowly and smoothly from a dead stop |
@@ -25,7 +25,7 @@ Always test on the bench with the blades removed first.
 
 | Setting | Range | Default | Description |
 |---|---|---|---|
-| `heli_spoolup_sec` | 0–60 s | 15 | Spool-up time from a stop to the commanded throttle. 0 turns the feature off (stock, immediate response). |
+| `heli_spoolup_sec` | 0–60 s | 20 | Spool-up time from a stop to the commanded throttle. 0 turns the feature off (stock, immediate response). |
 | `heli_bail_window_sec` | 0–60 s | 10 | After a throttle cut in flight, how long a quick re-spool is allowed. 0 turns bailout off. |
 | `heli_bail_spool_ms` | 500–10000 ms | 1500 | Re-spool time during a bailout. Never longer than `heli_spoolup_sec`; the ESC limits it automatically. |
 
@@ -37,7 +37,7 @@ These settings are not available with brushed motors.
 
 ### Spool-up
 
-When throttle is applied from a stop, the ESC ramps the throttle in a straight line from zero to whatever the flight controller commands, over `heli_spoolup_sec`. The time is the same regardless of the target: with a 15 s setting, 70% throttle is reached in 15 s, and so is 50%. If the flight controller changes its target during the spool-up, the ramp follows it smoothly.
+When throttle is applied from a stop, the ESC ramps the throttle in a straight line from zero to whatever the flight controller commands, over `heli_spoolup_sec`. The time is the same regardless of the target: with a 20 s setting, 70% throttle is reached in 20 s, and so is 50%. If the flight controller changes its target during the spool-up, the ramp follows it smoothly.
 
 Once the spool-up completes, throttle passes straight through with no delay.
 
@@ -53,14 +53,14 @@ Otherwise the normal `heli_spoolup_sec` spool-up is used.
 
 Whenever the rotor is still turning at a restart, the ramp starts from the throttle that matches the rotor's current speed rather than from zero. This keeps the ESC from braking a coasting rotor.
 
-### Examples (defaults: 15 s spool-up, 10 s window, 1.5 s bailout)
+### Examples (defaults: 20 s spool-up, 10 s window, 1.5 s bailout)
 
 | Situation | Result |
 |---|---|
-| Arm on the ground, flight controller sends 70% | Head reaches speed in 15 s |
+| Arm on the ground, flight controller sends 70% | Head reaches speed in 20 s |
 | In flight, throttle hold, released 4 s later | Back to speed in about 1.5 s, starting from the current rotor speed |
-| Autorotation to the ground, hold released 20 s later | Window expired: full 15 s spool-up |
-| Throttle cut halfway through the first spool-up | Next start is a full 15 s spool-up (was not yet flying) |
+| Autorotation to the ground, hold released 20 s later | Window expired: full 20 s spool-up |
+| Throttle cut halfway through the first spool-up | Next start is a full 20 s spool-up (was not yet flying) |
 
 ## Implementation notes
 
@@ -75,4 +75,3 @@ The new configuration fields are appended to the end of `Cfg` in `common.h`, so 
 - ESC: Sequre 28120
 - Flight controller: Flywing H1 Pro (sends a fixed 70% throttle target on arm)
 - Bench-tested and flight-tested.
-
