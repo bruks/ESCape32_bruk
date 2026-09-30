@@ -10,7 +10,7 @@ Many heli flight controllers send a fixed throttle target the moment the model i
 
 | Setting | Recommended | Why |
 |---|---|---|
-| `heli_spoolup_sec` | 10–15 | Time for the head to reach speed after arming |
+| `heli_spoolup_sec` | 20–25 | Time for the head to reach speed after arming |
 | `heli_bail_window_sec` | 5–10 | How long after a throttle cut a quick recovery is allowed |
 | `heli_bail_spool_ms` | 1000–2000 | How fast power returns during that recovery |
 | `sine_range` | 5–8 | Lets the motor turn slowly and smoothly from a dead stop |
