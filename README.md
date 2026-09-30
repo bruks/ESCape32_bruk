@@ -1,3 +1,25 @@
+# ESCape32 Heli Spool-Up Fork (unofficial)
+
+This is an unofficial fork of [ESCape32](https://github.com/neoxic/ESCape32) by Arseny Vakhrushev. It adds Hobbywing-style soft start for helicopters. It is not supported by the upstream project, so please report issues here, not on the ESCape32 Discord.
+
+**Version:** 17.50 (based on upstream revision 17, patch 2)
+
+## What's changed
+- Helicopter soft start / spool-up ramp (default 15 s)
+- Bailout window and bailout spool time, adjustable over the Wi-Fi link
+- New settings: `heli_spoolup_sec`, `heli_bail_window_sec`, `heli_bail_spool_ms`
+
+Tested on a Sequre 28120 ESC with a Flywing H1 Pro flight controller.
+
+## ⚠️ Safety
+Always test with the main and tail blades removed first. Confirm the spool-up time and bailout behavior before flying. Use at your own risk.
+
+## License
+GPLv3, same as upstream. Original copyright belongs to Arseny Vakhrushev. Modifications © 2026 Bruk. Full source for every release is in this repository.
+
+---
+
+
 ESCape32
 ========
 
