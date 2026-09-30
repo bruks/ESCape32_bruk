@@ -15,10 +15,17 @@
 ** along with this firmware. If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+** Modified 2026 by Bruk: added helicopter soft start / spool-up
+** (heli_spoolup_sec, heli_bail_window_sec, heli_bail_spool_ms).
+** Unofficial fork, not part of upstream ESCape32.
+*/
+
+
 #include "common.h"
 
 #define REVISION 17
-#define REVPATCH 2
+#define REVPATCH 50
 
 const Cfg cfgdata = {
 	.id = 0x32ea,
